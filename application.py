@@ -7,7 +7,7 @@ BUFFER_SIZE = 1024
 
 
 def read_log_file(file):
-    interval = 1.0
+    interval = 5.0
     while True:
         where = file.tell()
         line = file.readline()
@@ -50,3 +50,5 @@ def read_application_logs(file):
 
 if __name__ == '__main__':
     read_application_logs("application_logs.txt")
+
+#userid,severity,datetime,pageid,message

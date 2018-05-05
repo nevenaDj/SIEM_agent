@@ -33,5 +33,4 @@ def write_logs(file_name):
 
 
 if __name__ == '__main__':
-
     write_logs("server_logs.txt")

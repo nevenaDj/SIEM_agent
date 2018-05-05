@@ -9,7 +9,7 @@ BUFFER_SIZE = 1024
 
 
 def read_log_file(file):
-    interval = 1.0
+    interval = 5.0
     while True:
         where = file.tell()
         line = file.readline()
@@ -30,7 +30,7 @@ def parse_log_line(line):
     status = log_line_data['status']
     timestamp = log_line_data['time_received_isoformat']
     #pprint(log_line_data)
-    pri = 4 * 8 + 2
+    pri = 3 * 8 + 2
     if status.startswith("5"):
         pri = 1 * 8 + 2
 
@@ -63,3 +63,4 @@ def read_server_logs(file):
 if __name__ == '__main__':
     read_server_logs("server_logs.txt")
 
+#IP_address identd userid [day/month/year:hour:minute:second zone] request status size "Referer" "User-agent"

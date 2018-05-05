@@ -30,7 +30,7 @@ def get_log_line(tokens):
     dst_port = tokens[7]
     path = tokens[16]
 
-    pri = 4 * 8 + 1
+    pri = 3 * 8 + 1
     version = 1
     timestamp = "%sT%s" % (date, time)
     hostname = socket.gethostname()
@@ -68,7 +68,6 @@ def read_firewall_logs(file):
 
         if current_datetime < timestamp:
             line = get_log_line(tokens)
-            print(line)
             line_bytes = str.encode(line)
             s.sendto(line_bytes, (TCP_IP, TCP_PORT))
             time.sleep(0.01)
@@ -78,3 +77,6 @@ def read_firewall_logs(file):
 
 if __name__ == '__main__':
     read_firewall_logs("C:\Windows\System32\LogFiles\Firewall\pfirewall.log")
+
+
+#date time action protocol src-ip dst-ip src-port dst-port size tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
