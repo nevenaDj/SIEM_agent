@@ -1,12 +1,14 @@
 import apache_log_parser
 import threading
 import socket
+import ssl
 import time
 import json
 import re
 from datetime import datetime, timedelta
 from winevt import EventLog
 from pprint import pprint
+from _ssl import PROTOCOL_TLSv1_2
 
 TCP_IP = 'localhost'
 TCP_PORT = 9000
@@ -106,20 +108,30 @@ def parse_server_log(line):
 def read_logs(log_file, data):
     print(data)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((TCP_IP, TCP_PORT))
+
+    context = ssl.SSLContext(protocol=PROTOCOL_TLSv1_2)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    context.load_verify_locations("mycert.pem")
+
+    conn = context.wrap_socket(s, server_hostname="localhost", server_side=False)
+    conn.connect((TCP_IP, TCP_PORT))
+
     log_lines = read_log_file(log_file)
+
     for line in log_lines:
             # only one thread at a time can print to the user
         log_line = parse_log_line(line, data)
+        print(log_line)
         if log_line == "-":
             continue
         lock.acquire()
         print(log_line)
         line_bytes = str.encode(log_line)
-        s.sendto(line_bytes, (TCP_IP, TCP_PORT))
+        conn.send(line_bytes)
         #time.sleep(0.01)
         lock.release()
-    s.close()
+    conn.close()
 
 
 def get_log_line(event):
@@ -159,23 +171,31 @@ def get_windows_logs():
     current_datetime_security = start_time.isoformat()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((TCP_IP, TCP_PORT))
+    context = ssl.SSLContext(protocol=PROTOCOL_TLSv1_2)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    context.load_verify_locations("mycert.pem")
+    context.load_cert_chain(certfile="mycert.pem", keyfile="mycert.pem", password="secretpassword")
+
+    conn = context.wrap_socket(s, server_hostname="localhost", server_side=False)
+    conn.connect((TCP_IP, TCP_PORT))
+
 
     while 1:
         query_security = EventLog.Query("C://Windows//System32//winevt//Logs//Security.evtx", "Event/System[Level>0 and Level<=3]")
         query_system = EventLog.Query("C://Windows//System32//winevt//Logs//System.evtx", "Event/System[Level>0 and Level<=3]")
         query_application = EventLog.Query("C://Windows//System32//winevt//Logs//Application.evtx", "Event/System[Level>0 and Level<=3]")
 
-        current_datetime_system = events_in_query(query_system, current_datetime_system,s)
+        current_datetime_system = events_in_query(query_system, current_datetime_system,conn)
         time.sleep(interval)
 
-        current_datetime_application = events_in_query(query_application, current_datetime_application,s)
+        current_datetime_application = events_in_query(query_application, current_datetime_application,conn)
         time.sleep(interval)
 
-        current_datetime_security = events_in_query(query_security, current_datetime_security,s)
+        current_datetime_security = events_in_query(query_security, current_datetime_security,conn)
         time.sleep(interval)
 
-    s.close()
+    conn.close()
 
 
 if __name__ == '__main__':
