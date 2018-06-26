@@ -10,7 +10,7 @@ from winevt import EventLog
 from pprint import pprint
 from _ssl import PROTOCOL_TLSv1_2
 
-TCP_IP = 'localhost'
+TCP_IP = 'localhost'#'192.168.137.34'
 TCP_PORT = 9000
 BUFFER_SIZE = 1024
 
@@ -50,6 +50,7 @@ def parse_log_line(line, data):
             times = ""
             last = ""
             j = 0
+            pri = int(data["severity"]) * 8 + 3
             tokens = line.strip().split(data['splitter'])
             tokens_line = data['line'].split(data['splitter'])
             tokens_time = data['timestamp'].split(data['splitter'])
